@@ -12,3 +12,5 @@ class FinanceService:
     
     def totals(self) -> tuple[float, float, float]:
         return self.account.income, self.account.expense, self.account.balance
+    
+    

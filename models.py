@@ -8,7 +8,7 @@ class Transaction:
     
     def display_text(self) -> str:
         sign = "+" if self.kind == "Income" else "-"
-        return f"{self.description:<24} {sign}${self.amount:,.2f}"
+        return f"{self.description:<24} sign${self.amount:,.2f}"
 
 @dataclass
 class Account:
