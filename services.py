@@ -8,6 +8,9 @@ class FinanceService:
 
     def add_transaction(self, description: str, amount: float, kind: str) -> None:
         self.account.add(Transaction(description, amount, kind))
+        
+    def delete_transaction(self, transaction_id: str) -> None:
+        self.account.remove(transaction_id)
 
     def all_transactions(self) -> list[Transaction]:
         return list(self.account.transactions)

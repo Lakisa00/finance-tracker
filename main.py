@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from models import Account
+from models import Account, ValidationError
 from services import FinanceService
 
 
@@ -10,7 +10,7 @@ class FinanceTrackerApp:
         self.service = service
         self.root = tk.Tk()
         self.root.title("Finance Tracker")
-        self.root.geometry("700x540")
+        self.root.geometry("760x560")
         self.build_ui()
         self.refresh_view()
 
@@ -18,7 +18,6 @@ class FinanceTrackerApp:
         frame = ttk.Frame(self.root, padding=20)
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="My account", font=("TkDefaultFont", 18, "bold")).pack(anchor="w")
-
         summary = ttk.Frame(frame)
         summary.pack(fill="x", pady=14)
         self.income_label = self.make_summary(summary, "Income", 0)
@@ -39,8 +38,14 @@ class FinanceTrackerApp:
         self.kind_box.grid(row=1, column=2, padx=5)
         ttk.Button(form, text="Add", command=self.add_transaction).grid(row=1, column=3, padx=5)
 
-        self.transaction_list = tk.Listbox(frame, font=("TkFixedFont", 11), height=14)
-        self.transaction_list.pack(fill="both", expand=True)
+        self.table = ttk.Treeview(frame, columns=("description", "type", "amount"), show="headings", height=13)
+        for name, title in (("description", "Description"), ("type", "Type"), ("amount", "Amount")):
+            self.table.heading(name, text=title)
+        self.table.column("description", width=360)
+        self.table.column("type", width=120)
+        self.table.column("amount", width=140, anchor="e")
+        self.table.pack(fill="both", expand=True)
+        ttk.Button(frame, text="Delete selected", command=self.delete_selected).pack(anchor="e", pady=(10, 0))
 
     @staticmethod
     def make_summary(parent: ttk.Frame, title: str, column: int) -> ttk.Label:
@@ -53,15 +58,20 @@ class FinanceTrackerApp:
 
     def add_transaction(self) -> None:
         try:
-            amount = float(self.amount_entry.get())
-        except ValueError:
-            messagebox.showerror("Invalid amount", "Enter a number")
+            self.service.add_transaction(self.description_entry.get(),self.amount_entry.get(), self.kind_box.get())
+        except ValidationError as error:
+            messagebox.showerror("Cannot add transaction", str(error))
             return
-        self.service.add_transaction(
-            self.description_entry.get() or "Untitled", amount, self.kind_box.get()
-        )
         self.description_entry.delete(0, tk.END)
         self.amount_entry.delete(0, tk.END)
+        self.refresh_view()
+
+    def delete_selected(self) ->None:
+        selected = self.table.selection()
+        if not selected:
+            messagebox.showinfo("Selected transaction", "Choose a row to delete")
+            return
+        self.service.delete_transaction(selected[0])
         self.refresh_view()
 
     def refresh_view(self) -> None:
@@ -69,14 +79,14 @@ class FinanceTrackerApp:
         self.income_label.config(text=f"${income:,.2f}")
         self.expense_label.config(text=f"${expenses:,.2f}")
         self.balance_label.config(text=f"${balance:,.2f}")
-        self.transaction_list.delete(0, tk.END)
-        for transaction in self.service.all_transactions():
-            self.transaction_list.insert(tk.END, transaction.display_text())
+        for row in self.table.get_children():
+            self.table.delete(row)
+        for item in self.service.all_transactions():
+            self.table.insert("", "end", iid=item.id, values=(item.description, item.kind, f"${item.amount:,.2f}"))
 
     def run(self) -> None:
         self.root.mainloop()
 
 
 if __name__ == "__main__":
-    service = FinanceService(Account("account"))
-    FinanceTrackerApp(service).run()
+    FinanceTrackerApp(FinanceService(Account("Everyday account"))).run()
