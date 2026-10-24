@@ -2,13 +2,12 @@ from models import Account, Transaction
 
 
 class FinanceService:
-
     def __init__(self, account: Account) -> None:
         self.account = account
 
-    def add_transaction(self, description: str, amount: float, kind: str) -> None:
-        self.account.add(Transaction(description, amount, kind))
-        
+    def add_transaction(self, description: str, amount_text: str, kind: str) -> None:
+        self.account.add(Transaction.create(description, amount_text, kind))
+
     def delete_transaction(self, transaction_id: str) -> None:
         self.account.remove(transaction_id)
 

@@ -58,7 +58,7 @@ class FinanceTrackerApp:
 
     def add_transaction(self) -> None:
         try:
-            self.service.add_transaction(self.description_entry.get(),self.amount_entry.get(), self.kind_box.get())
+            self.service.add_transaction(self.description_entry.get(), self.amount_entry.get(), self.kind_box.get())
         except ValidationError as error:
             messagebox.showerror("Cannot add transaction", str(error))
             return
@@ -66,10 +66,10 @@ class FinanceTrackerApp:
         self.amount_entry.delete(0, tk.END)
         self.refresh_view()
 
-    def delete_selected(self) ->None:
+    def delete_selected(self) -> None:
         selected = self.table.selection()
         if not selected:
-            messagebox.showinfo("Selected transaction", "Choose a row to delete")
+            messagebox.showinfo("Select a transaction", "Choose a row to delete.")
             return
         self.service.delete_transaction(selected[0])
         self.refresh_view()
