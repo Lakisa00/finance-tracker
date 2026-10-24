@@ -28,6 +28,12 @@ class Transaction:
             raise ValidationError("Type must be Income or Expense.")
         return cls(description, amount, kind)
 
+    def to_dict(self) -> dict[str, str | float]:
+        return {"id": self.id, "description": self.description, "amount": self.amount, "kind": self.kind}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Transaction":
+        return cls(str(data["descritpion"]), float(data["amount"]), str(data["kind"]), str(data["id"]))
 
 @dataclass
 class Account:
