@@ -33,7 +33,7 @@ class Transaction:
 
     @classmethod
     def from_dict(cls, data: dict) -> "Transaction":
-        return cls(str(data["descritpion"]), float(data["amount"]), str(data["kind"]), str(data["id"]))
+        return cls(str(data["description"]), float(data["amount"]), str(data["kind"]), str(data["id"]))
 
 @dataclass
 class Account:

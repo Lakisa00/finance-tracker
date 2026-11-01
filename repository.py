@@ -10,7 +10,7 @@ class TransactionRepository(Protocol):
     
 class JsonTransactionRepository:
     def __init__(self, path:Path) -> None:
-        self.path = Path
+        self.path = path
     
     def load(self) -> list[Transaction]:
         if not self.path.exists():
