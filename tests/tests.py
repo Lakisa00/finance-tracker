@@ -1,5 +1,8 @@
 import unittest
 from models import Account, Transaction, ValidationError
+import tempfile 
+from pathlib import Path
+from repository import JsonTransactionRepository
 
 class AccountTests(unittest.TestCase):
     def test_totals_income_expenses_and_balance(self) -> None:
@@ -29,6 +32,14 @@ class AccountTests(unittest.TestCase):
         account = Account("Test", [item])
         account.remove(item.id)
         self.assertEqual(account.transactions, [])
+        
+    def test_round_trip(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = JsonTransactionRepository(Path(directory)/"data.json")
+            original = [Transaction.create("Salary", "1000", "Income")]
+            repository.save(original)
+            loaded = repository.load()
+            self.assertEqual(loaded, original)
         
 if __name__ == "__main__":
     unittest.main()
