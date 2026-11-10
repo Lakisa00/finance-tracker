@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from uuid import uuid4
 
+CATEGORIES = ("Housing", "Food", "Transport", "Pokemon", "Fun", "Salary", "Other")
+
 
 class ValidationError(ValueError):
     """Raised when a domain object cannot be created from user input."""
@@ -11,10 +13,12 @@ class Transaction:
     description: str
     amount: float
     kind: str
+    category: str
     id: str = field(default_factory=lambda: str(uuid4()))
+    
 
     @classmethod
-    def create(cls, description: str, amount_text: str, kind: str) -> "Transaction":
+    def create(cls, description: str, amount_text: str, kind: str, category:str) -> "Transaction":
         description = description.strip()
         if not description:
             raise ValidationError("Description cannot be empty.")
@@ -26,14 +30,16 @@ class Transaction:
             raise ValidationError("Amount must be greater than zero.")
         if kind not in ("Income", "Expense"):
             raise ValidationError("Type must be Income or Expense.")
-        return cls(description, amount, kind)
+        if category not in CATEGORIES:
+            raise ValidationError("Choose a valid category")        
+        return cls(description, amount, kind, category)
 
     def to_dict(self) -> dict[str, str | float]:
-        return {"id": self.id, "description": self.description, "amount": self.amount, "kind": self.kind}
+        return {"id": self.id, "description": self.description, "amount": self.amount, "kind": self.kind, "category": self.category}
 
     @classmethod
     def from_dict(cls, data: dict) -> "Transaction":
-        return cls(str(data["description"]), float(data["amount"]), str(data["kind"]), str(data["id"]))
+        return cls(str(data["description"]), float(data["amount"]), str(data["kind"]), str(data.get("category", "Other")),str(data["id"]))
 
 @dataclass
 class Account:
