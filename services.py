@@ -1,5 +1,5 @@
-from models import Account, Transaction
-from repository import TransactionRepository
+from models import Account, Budget, Transaction
+from repository import BudgetRepository, TransactionRepository
 
 
 class FinanceService:
@@ -34,4 +34,21 @@ class ReportService:
     def expense_total_for(self, category:str) -> float:
         return sum(transaction.amount for transaction in self.transactions_for(category) if transaction.kind == "Expense")
     
+class BudgetService:
+    def __init__(self, account: Account, repository: BudgetRepository) -> None:
+        self.account, self.repository = account, repository
+        self.account.budgets = repository.load()
+        
+    def add(self, category:str, limit: str) -> None:
+        budget = Budget.create(category, limit)
+        self.account.budgets = [x for x in self.account.budgets if x.category != category]
+        self.account.budgets.append(budget)
+        self.repository.save(self.account.budgets)
     
+    def delete(self, budget_id:str)-> str:
+        self.account.budgets = [x for x in self.account.budgets if x.id != budget_id]
+        self.repository.save(self.account.budgets)
+    
+    def progress(self, budget: Budget) -> tuple[float, float]:
+        spent = sum(x.amount for x in self.account.transactions if x.kind == "Expense" and x.category == budget.category)
+        return spent, min(spent/float(budget.limit)*100, 100)

@@ -7,6 +7,12 @@ CATEGORIES = ("Housing", "Food", "Transport", "Pokemon", "Fun", "Salary", "Other
 class ValidationError(ValueError):
     """Raised when a domain object cannot be created from user input."""
 
+def positive_number(text:str)-> float:
+    try: value = float(text)
+    except ValueError as error: raise ValidationError("Amount must be a number") from error
+    if value<=0:
+        raise ValidationError("Amount must be greater than 0")
+    return value
 
 @dataclass
 class Transaction:
@@ -32,7 +38,7 @@ class Transaction:
             raise ValidationError("Type must be Income or Expense.")
         if category not in CATEGORIES:
             raise ValidationError("Choose a valid category")        
-        return cls(description, amount, kind, category)
+        return cls(description, positive_number(amount), kind, category)
 
     def to_dict(self) -> dict[str, str | float]:
         return {"id": self.id, "description": self.description, "amount": self.amount, "kind": self.kind, "category": self.category}
@@ -42,9 +48,28 @@ class Transaction:
         return cls(str(data["description"]), float(data["amount"]), str(data["kind"]), str(data.get("category", "Other")),str(data["id"]))
 
 @dataclass
+class Budget:
+    limit: float
+    category: str
+    id: str = field(default_factory=lambda: str(uuid4()))
+    
+    @classmethod
+    def create(cls, category, limit) -> "Budget":
+        if category not in CATEGORIES:
+            raise ValidationError("Choose a valid category")
+        return cls(category, positive_number(limit))
+    
+    def to_dict(self) -> dict:
+        return {"id": self.id, "category": self.category, "limit": self.limit}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Budget":
+        return cls(str(data["category"]), float(data["limit"]), str(data["id"]))
+@dataclass
 class Account:
     name: str
     transactions: list[Transaction] = field(default_factory=list)
+    budgets: list[Budget] = field(default_factory=list)
 
     def add(self, transaction: Transaction) -> None:
         self.transactions.append(transaction)
@@ -63,3 +88,4 @@ class Account:
     @property
     def balance(self) -> float:
         return self.income - self.expenses
+    
